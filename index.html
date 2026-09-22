@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e293b">
+<title>JPG to PDF Converter — Convert JPG, JPEG &amp; PNG to PDF</title>
+<style>
+  :root{
+    --bg:#0f172a;
+    --panel:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --brand:#2563eb;
+    --brand-dark:#1d4ed8;
+    --danger:#dc2626;
+    --ok:#059669;
+    --radius:14px;
+    --shadow:0 10px 30px rgba(15,23,42,.10);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:linear-gradient(180deg,#eef2ff 0%,#f8fafc 260px,#f8fafc 100%);
+    color:var(--ink);
+    line-height:1.5;
+    -webkit-text-size-adjust:100%;
+    padding:0 0 env(safe-area-inset-bottom);
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:20px 16px 56px;}
+  header.app{text-align:center;padding:12px 0 22px;}
+  header.app h1{font-size:clamp(1.5rem,5vw,2.1rem);margin:0 0 6px;letter-spacing:-.02em;}
+  header.app p{margin:0;color:var(--muted);font-size:.97rem;}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:18px;
+    margin-bottom:18px;
+    position:relative;
+  }
+  .card h2{font-size:1.02rem;margin:0 0 14px;letter-spacing:-.01em;}
+
+  /* ---------- Upload area: the ONLY element that opens the picker ---------- */
+  .dropzone{
+    position:relative;
+    display:block;
+    width:100%;
+    border:2px dashed #c7d2fe;
+    background:#f8faff;
+    border-radius:var(--radius);
+    padding:30px 18px;
+    text-align:center;
+    cursor:pointer;
+    font:inherit;
+    color:inherit;
+    transition:border-color .15s,background .15s,transform .06s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .dropzone:hover{border-color:var(--brand);background:#eff4ff;}
+  .dropzone:active{transform:scale(.995);}
+  .dropzone:focus-visible{outline:3px solid var(--brand);outline-offset:3px;}
+  .dropzone.dragging{border-color:var(--brand);background:#e6edff;}
+  .dropzone .icon{font-size:2.2rem;line-height:1;display:block;margin-bottom:8px;}
+  .dropzone .big{display:block;font-weight:650;font-size:1.06rem;}
+  .dropzone .small{display:block;color:var(--muted);font-size:.87rem;margin-top:5px;}
+  /* The file input is visually hidden and REMOVED from the hit-test surface.
+     It is never stretched over the page; clicks reach it only via .click(). */
+  #fileInput{
+    position:absolute;
+    width:1px;height:1px;
+    padding:0;margin:-1px;
+    overflow:hidden;
+    clip:rect(0 0 0 0);
+    clip-path:inset(50%);
+    white-space:nowrap;
+    border:0;
+    pointer-events:none;
+  }
+
+  /* ---------- Settings ---------- */
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));}
+  .field{display:flex;flex-direction:column;gap:6px;min-width:0;}
+  .field label{font-size:.85rem;font-weight:600;color:#334155;}
+  select{
+    appearance:none;-webkit-appearance:none;
+    width:100%;
+    min-height:48px;
+    padding:10px 38px 10px 12px;
+    font:inherit;
+    color:var(--ink);
+    background-color:#fff;
+    background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='[w3.org](http://www.w3.org/2000/svg)' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 11px center;
+    background-size:18px 18px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    cursor:pointer;
+  }
+  select:focus-visible{outline:3px solid var(--brand);outline-offset:1px;border-color:var(--brand);}
+  .hint{font-size:.78rem;color:var(--muted);}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:48px;
+    padding:12px 18px;
+    font:inherit;font-weight:650;
+    border-radius:11px;
+    border:1px solid transparent;
+    background:#f1f5f9;color:#0f172a;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+  }
+  .btn:focus-visible{outline:3px solid var(--brand);outline-offset:2px;}
+  .btn[disabled]{opacity:.55;cursor:not-allowed;}
+  .btn-primary{background:var(--brand);color:#fff;width:100%;font-size:1.05rem;min-height:56px;}
+  .btn-primary:hover:not([disabled]){background:var(--brand-dark);}
+  .btn-ghost{background:#fff;border-color:var(--line);color:#334155;}
+  .btn-ghost:hover{background:#f8fafc;}
+  .btn-danger{background:#fff;border-color:#fecaca;color:var(--danger);}
+  .btn-danger:hover{background:#fef2f2;}
+
+  /* ---------- List ---------- */
+  .list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .count{font-weight:650;font-size:.95rem;}
+  .count span{color:var(--muted);font-weight:500;}
+  ul.items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px;}
+  li.item{
+    display:grid;
+    grid-template-columns:76px 1fr;
+    gap:12px;
+    align-items:center;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:10px;
+    background:#fff;
+  }
+  .thumb{
+    width:76px;height:76px;
+    border-radius:9px;
+    background:#f1f5f9 center/contain no-repeat;
+    border:1px solid var(--line);
+    overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .thumb img{max-width:100%;max-height:100%;display:block;transition:transform .18s;}
+  .meta{min-width:0;}
+  .name{
+    font-size:.9rem;font-weight:600;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .sub{font-size:.78rem;color:var(--muted);margin-top:2px;}
+  .row-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;}
+  .icon-btn{
+    min-height:40px;min-width:44px;
+    padding:8px 12px;
+    font-size:.82rem;font-weight:600;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:#fff;color:#334155;
+    cursor:pointer;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .icon-btn:hover:not([disabled]){background:#f1f5f9;}
+  .icon-btn:focus-visible{outline:3px solid var(--brand);outline-offset:2px;}
+  .icon-btn[disabled]{opacity:.35;cursor:not-allowed;}
+  .icon-btn.remove{color:var(--danger);border-color:#fecaca;}
+  .icon-btn.remove:hover{background:#fef2f2;}
+
+  /* ---------- Status ---------- */
+  .status{
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:10px;
+    font-size:.9rem;
+    display:none;
+  }
+  .status.show{display:block;}
+  .status.err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca;}
+  .status.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;}
+  .status.info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe;}
+
+  .progress{height:6px;border-radius:99px;background:#e2e8f0;overflow:hidden;margin-top:12px;display:none;}
+  .progress.show{display:block;}
+  .progress i{display:block;height:100%;width:0;background:var(--brand);transition:width .2s;}
+
+  .empty{color:var(--muted);font-size:.9rem;text-align:center;padding:14px 0;}
+  footer.app{text-align:center;color:var(--muted);font-size:.8rem;padding-top:8px;}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;}
+
+  @media (max-width:420px){
+    .card{padding:15px;}
+    li.item{grid-template-columns:62px 1fr;}
+    .thumb{width:62px;height:62px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app">
+    <h1>Convert JPG to PDF</h1>
+    <p>Combine JPG, JPEG and PNG images into one PDF — entirely on your device.</p>
+  </header>
+
+  <!-- ============ UPLOAD ============ -->
+  <section class="card" aria-labelledby="h-upload">
+    <h2 id="h-upload">1 &middot; Choose images</h2>
+
+    <button type="button" id="dropzone" class="dropzone" aria-describedby="uploadHelp">
+      <span class="icon" aria-hidden="true">🖼️</span>
+      <span class="big">Tap to choose images</span>
+      <span class="small" id="uploadHelp">JPG, JPEG or PNG &middot; select one or many &middot; or drop files here</span>
+    </button>
+
+    <!-- Hidden input: 1×1px, clipped, pointer-events:none. Only opened programmatically. -->
+    <input type="file" id="fileInput" accept="image/jpeg,image/jpg,image/png,.jpg,.jpeg,.png" multiple tabindex="-1" aria-hidden="true">
+
+    <div class="status" id="uploadStatus" role="status" aria-live="polite"></div>
+  </section>
+
+  <!-- ============ IMAGES ============ -->
+  <section class="card" aria-labelledby="h-images">
+    <div class="list-head">
+      <h2 id="h-images" style="margin:0;">2 &middot; Your images</h2>
+      <div class="count" id="countLabel">0 images <span>selected</span></div>
+    </div>
+
+    <ul class="items" id="itemList"></ul>
+    <p class="empty" id="emptyNote">No images yet. Choose some above to get started.</p>
+
+    <div style="margin-top:14px;">
+      <button type="button" class="btn btn-danger" id="clearAllBtn" disabled>Clear all</button>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section class="card" aria-labelledby="h-settings">
+    <h2 id="h-settings">3 &middot; PDF settings</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="pageSize">Page size</label>
+        <select id="pageSize">
+          <option value="a4" selected>A4 (210 × 297 mm)</option>
+          <option value="letter">US Letter (8.5 × 11 in)</option>
+          <option value="fit">Fit to image</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="orientation">Orientation</label>
+        <select id="orientation">
+          <option value="auto" selected>Auto</option>
+          <option value="portrait">Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select>
+        <span class="hint" id="orientHint">Auto follows each image’s shape.</span>
+      </div>
+      <div class="field">
+        <label for="quality">Image quality</label>
+        <select id="quality">
+          <option value="high" selected>High — best quality</option>
+          <option value="good">Good — balanced</option>
+          <option value="small">Smaller file</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DOWNLOAD ============ -->
+  <section class="card" aria-labelledby="h-download">
+    <h2 id="h-download" class="sr-only">4 · Download</h2>
+    <button type="button" class="btn btn-primary" id="downloadBtn">Download PDF</button>
+    <div class="progress" id="progressBar"><i id="progressFill"></i></div>
+    <div class="status" id="mainStatus" role="status" aria-live="polite"></div>
+  </section>
+
+  <footer class="app">Your files never leave this device — all conversion happens in your browser.</footer>
+</div>
+
+<script>
+"use strict";
+(function () {
+
+/* =====================================================================
+   STATE — single source of truth
+   ===================================================================== */
+const state = {
+  images: [],          // [{ id, name, file, url, width, height, rotation }]
+  pageSize: "a4",
+  orientation: "auto",
+  quality: "high",
+  generating: false
+};
+let idSeq = 0;
+
+const QUALITY = { high: 0.92, good: 0.80, small: 0.62 };
+const MAX_PIXELS = { high: 12e6, good: 6e6, small: 3e6 }; // downscale ceiling per image
+const MAX_DIMENSION = 4096;   // stay well inside mobile canvas limits
+const MAX_FILE_BYTES = 60 * 1024 * 1024;
+const ACCEPTED = ["image/jpeg", "image/jpg", "image/png"];
+
+/* =====================================================================
+   DOM
+   ===================================================================== */
+const $ = (id) => document.getElementById(id);
+const dropzone     = $("dropzone");
+const fileInput    = $("fileInput");
+const uploadStatus = $("uploadStatus");
+const itemList     = $("itemList");
+const emptyNote    = $("emptyNote");
+const countLabel   = $("countLabel");
+const clearAllBtn  = $("clearAllBtn");
+const pageSizeSel  = $("pageSize");
+const orientSel    = $("orientation");
+const orientHint   = $("orientHint");
+const qualitySel   = $("quality");
+const downloadBtn  = $("downloadBtn");
+const mainStatus   = $("mainStatus");
+const progressBar  = $("progressBar");
+const progressFill = $("progressFill");
+
+/* =====================================================================
+   UI helpers
+   ===================================================================== */
+function setStatus(el, message, kind) {
+  if (!message) { el.className = "status"; el.textContent = ""; return; }
+  el.className = "status show " + (kind || "info");
+  el.textContent = message;
+}
+function setProgress(fraction) {
+  if (fraction === null) { progressBar.classList.remove("show"); progressFill.style.width = "0%"; return; }
+  progressBar.classList.add("show");
+  progressFill.style.width = Math.max(0, Math.min(1, fraction)) * 100 + "%";
+}
+function humanSize(bytes) {
+  if (!bytes && bytes !== 0) return "";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1048576) return (bytes / 1024).toFixed(0) + " KB";
+  return (bytes / 1048576).toFixed(1) + " MB";
+}
+
+/* =====================================================================
+   RENDER — rebuild list from state
+   ===================================================================== */
+function render() {
+  const n = state.images.length;
+  countLabel.innerHTML = n + " image" + (n === 1 ? "" : "s") + " <span>selected</span>";
+  emptyNote.style.display = n ? "none" : "block";
+  clearAllBtn.disabled = n === 0;
+
+  itemList.textContent = "";
+  const frag = document.createDocumentFragment();
+
+  state.images.forEach((img, index) => {
+    const li = document.createElement("li");
+    li.className = "item";
+
+    const thumb = document.createElement("div");
+    thumb.className = "thumb";
+    const pic = document.createElement("img");
+    pic.src = img.url;
+    pic.alt = "Preview of " + img.name;
+    pic.loading = "lazy";
+    pic.decoding = "async";
+    pic.style.transform = "rotate(" + img.rotation + "deg)";
+    if (img.rotation % 180 === 90) {
+      const shrink = Math.min(1, img.width && img.height ? 1 : 1);
+      pic.style.maxWidth = "76%"; pic.style.maxHeight = "76%";
+      void shrink;
+    }
+    thumb.appendChild(pic);
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+
+    const name = document.createElement("div");
+    name.className = "name";
+    name.textContent = (index + 1) + ". " + img.name;
+
+    const sub = document.createElement("div");
+    sub.className = "sub";
+    sub.textContent = img.width + " × " + img.height + " px · " + humanSize(img.file.size) +
+                      (img.rotation ? " · rotated " + img.rotation + "°" : "");
+
+    const actions = document.createElement("div");
+    actions.className = "row-actions";
+
+    actions.appendChild(makeAction("↑", "Move " + img.name + " up", index === 0, () => move(img.id, -1)));
+    actions.appendChild(makeAction("↓", "Move " + img.name + " down", index === n - 1, () => move(img.id, 1)));
+    actions.appendChild(makeAction("⟳ Rotate", "Rotate " + img.name + " clockwise", false, () => rotate(img.id)));
+
+    const rm = makeAction("Remove", "Remove " + img.name, false, () => removeImage(img.id));
+    rm.classList.add("remove");
+    actions.appendChild(rm);
+
+    meta.append(name, sub, actions);
+    li.append(thumb, meta);
+    frag.appendChild(li);
+  });
+
+  itemList.appendChild(frag);
+}
+
+function makeAction(label, aria, disabled, handler) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "icon-btn";
+  b.textContent = label;
+  b.setAttribute("aria-label", aria);
+  b.disabled = !!disabled;
+  b.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();   // list sits in its own card; guards against future wrappers
+    if (state.generating) return;
+    handler();
+  });
+  return b;
+}
+
+/* =====================================================================
+   IMAGE ACTIONS — each touches exactly one image
+   ===================================================================== */
+function rotate(id) {
+  const img = state.images.find(i => i.id === id);
+  if (!img) return;
+  img.rotation = (img.rotation + 90) % 360;
+  render();
+}
+function removeImage(id) {
+  const i = state.images.findIndex(x => x.id === id);
+  if (i === -1) return;
+  URL.revokeObjectURL(state.images[i].url);
+  state.images.splice(i, 1);
+  render();
+  setStatus(mainStatus, "", null);
+}
+function move(id, delta) {
+  const i = state.images.findIndex(x => x.id === id);
+  const j = i + delta;
+  if (i === -1 || j < 0 || j >= state.images.length) return;
+  const tmp = state.images[i];
+  state.images[i] = state.images[j];
+  state.images[j] = tmp;
+  render();
+}
+function clearAll() {
+  state.images.forEach(i => URL.revokeObjectURL(i.url));
+  state.images = [];
+  render();
+  setStatus(uploadStatus, "", null);
+  setStatus(mainStatus, "", null);
+}
+
+/* =====================================================================
+   FILE INTAKE
+   ===================================================================== */
+function looksLikeImage(file) {
+  if (file.type && ACCEPTED.indexOf(file.type.toLowerCase()) !== -1) return true;
+  // Some Android pickers hand over an empty MIME type.
+  return /\.(jpe?g|png)$/i.test(file.name || "");
+}
+
+function probeImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const probe = new Image();
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true; URL.revokeObjectURL(url);
+      reject(new Error("timeout"));
+    }, 20000);
+
+    probe.onload = () => {
+      if (settled) return;
+      settled = true; clearTimeout(timer);
+      if (!probe.naturalWidth || !probe.naturalHeight) {
+        URL.revokeObjectURL(url);
+        reject(new Error("empty"));
+        return;
+      }
+      resolve({ url, width: probe.naturalWidth, height: probe.naturalHeight });
+    };
+    probe.onerror = () => {
+      if (settled) return;
+      settled = true; clearTimeout(timer);
+      URL.revokeObjectURL(url);
+      reject(new Error("decode"));
+    };
+    probe.src = url;
+  });
+}
+
+async function addFiles(fileList) {
+  const files = Array.prototype.slice.call(fileList || []);
+  if (!files.length) return;
+
+  const rejected = [];
+  let added = 0;
+
+  setStatus(uploadStatus, "Reading images…", "info");
+
+  for (const file of files) {
+    if (!looksLikeImage(file)) { rejected.push(file.name + " (not a JPG or PNG)"); continue; }
+    if (file.size === 0)       { rejected.push(file.name + " (empty file)"); continue; }
+    if (file.size > MAX_FILE_BYTES) { rejected.push(file.name + " (larger than 60 MB)"); continue; }
+
+    try {
+      const info = await probeImage(file);
+      state.images.push({
+        id: ++idSeq,
+        name: file.name || ("image-" + idSeq),
+        file,
+        url: info.url,
+        width: info.width,
+        height: info.height,
+        rotation: 0
+      });
+      added++;
+    } catch (err) {
+      rejected.push(file.name + " (could not be read)");
+    }
+  }
+
+  render();
+
+  if (added && !rejected.length) {
+    setStatus(uploadStatus, added + " image" + (added === 1 ? "" : "s") + " added.", "ok");
+  } else if (added && rejected.length) {
+    setStatus(uploadStatus, added + " added. Skipped: " + rejected.join(", ") + ".", "err");
+  } else {
+    setStatus(uploadStatus, "Nothing was added. Skipped: " + rejected.join(", ") + ".", "err");
+  }
+}
+
+/* =====================================================================
+   EVENT WIRING — one handler per control, no shared parents
+   ===================================================================== */
+dropzone.addEventListener("click", (e) => {
+  e.preventDefault();
+  if (state.generating) return;
+  fileInput.click();
+});
+
+fileInput.addEventListener("change", () => {
+  const picked = fileInput.files;
+  addFiles(picked).finally(() => { fileInput.value = ""; }); // allow re-picking the same file
+});
+
+["dragenter", "dragover"].forEach(evt =>
+  dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.add("dragging"); })
+);
+["dragleave", "drop"].forEach(evt =>
+  dropzone.addEventListener(evt, (e) => { e.preventDefault(); dropzone.classList.remove("dragging"); })
+);
+dropzone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  if (state.generating) return;
+  if (e.dataTransfer && e.dataTransfer.files) addFiles(e.dataTransfer.files);
+});
+// Stop the browser from navigating if a file is dropped outside the zone.
+window.addEventListener("dragover", (e) => e.preventDefault());
+window.addEventListener("drop", (e) => e.preventDefault());
+
+clearAllBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  if (state.generating) return;
+  clearAll();
+});
+
+// Settings mutate only their own slice of state. No re-render of the image list needed.
+pageSizeSel.addEventListener("change", () => {
+  state.pageSize = pageSizeSel.value;
+  orientHint.textContent = state.pageSize === "fit"
+    ? "With Fit to image, Auto keeps each image’s own shape."
+    : "Auto follows each image’s shape.";
+  setStatus(mainStatus, "", null);
+});
+orientSel.addEventListener("change", () => {
+  state.orientation = orientSel.value;
+  setStatus(mainStatus, "", null);
+});
+qualitySel.addEventListener("change", () => {
+  state.quality = qualitySel.value;
+  setStatus(mainStatus, "", null);
+});
+
+downloadBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  generate();
+});
+
+/* =====================================================================
+   RASTERISATION — rotate, flatten transparency, downscale, encode JPEG
+   ===================================================================== */
+function loadElement(url) {
+  return new Promise((resolve, reject) => {
+    const el = new Image();
+    el.onload = () => resolve(el);
+    el.onerror = () => reject(new Error("decode"));
+    el.src = url;
+  });
+}
+
+function canvasToBlob(canvas, quality) {
+  return new Promise((resolve, reject) => {
+    if (canvas.toBlob) {
+      canvas.toBlob(b => b ? resolve(b) : reject(new Error("encode")), "image/jpeg", quality);
+    } else {
+      try {
+        const dataUrl = canvas.toDataURL("image/jpeg", quality);
+        const comma = dataUrl.indexOf(",");
+        const bin = atob(dataUrl.slice(comma + 1));
+        const out = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+        resolve(new Blob([out], { type: "image/jpeg" }));
+      } catch (err) { reject(new Error("encode")); }
+    }
+  });
+}
+
+/**
+ * Produces a JPEG (always opaque, always upright) for one image.
+ * Returns { bytes:Uint8Array, width, height }.
+ */
+async function rasterise(item) {
+  const el = await loadElement(item.url);
+
+  const swapped = item.rotation % 180 === 90;
+  let w = swapped ? el.naturalHeight : el.naturalWidth;
+  let h = swapped ? el.naturalWidth  : el.naturalHeight;
+  if (!w || !h) throw new Error("bad-dimensions");
+
+  // Downscale so we never approach mobile canvas limits or blow up memory.
+  const pixelCap = MAX_PIXELS[state.quality] || MAX_PIXELS.high;
+  let scale = 1;
+  if (w * h > pixelCap) scale = Math.sqrt(pixelCap / (w * h));
+  if (w * scale > MAX_DIMENSION) scale = Math.min(scale, MAX_DIMENSION / w);
+  if (h * scale > MAX_DIMENSION) scale = Math.min(scale, MAX_DIMENSION / h);
+
+  const outW = Math.max(1, Math.round(w * scale));
+  const outH = Math.max(1, Math.round(h * scale));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = outW;
+  canvas.height = outH;
+  const ctx = canvas.getContext("2d", { alpha: false });
+  if (!ctx) throw new Error("no-canvas");
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+
+  // White base — flattens PNG transparency so nothing turns black in the PDF.
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, outW, outH);
+
+  ctx.save();
+  ctx.translate(outW / 2, outH / 2);
+  ctx.rotate(item.rotation * Math.PI / 180);
+  const drawW = (swapped ? outH : outW);
+  const drawH = (swapped ? outW : outH);
+  ctx.drawImage(el, -drawW / 2, -drawH / 2, drawW, drawH);
+  ctx.restore();
+
+  const blob = await canvasToBlob(canvas, QUALITY[state.quality] || 0.9);
+  const buffer = await blob.arrayBuffer();
+
+  // Free the canvas promptly (iOS/Android are strict about canvas memory).
+  canvas.width = 1; canvas.height = 1;
+
+  return { bytes: new Uint8Array(buffer), width: outW, height: outH };
+}
+
+/* =====================================================================
+   PDF WRITER — self-contained, binary-safe, no dependencies
+   Builds a PDF 1.4 document with one DCTDecode (JPEG) XObject per page.
+   All binary handling uses Uint8Array chunks; no spread on large arrays,
+   no String.fromCharCode.apply over big buffers.
+   ===================================================================== */
+const PT_PER_MM = 72 / 25.4;
+const PAGE_DIMS = {
+  a4:     { w: 210 * PT_PER_MM, h: 297 * PT_PER_MM },   // 595.28 × 841.89
+  letter: { w: 612, h: 792 }
+};
+
+function asciiBytes(str) {
+  const out = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) out[i] = str.charCodeAt(i) & 0xFF;
+  return out;
+}
+
+function PdfBuilder() {
+  this.chunks = [];
+  this.length = 0;
+}
+PdfBuilder.prototype.pushBytes = function (bytes) {
+  this.chunks.push(bytes);
+  this.length += bytes.length;
+};
+PdfBuilder.prototype.pushText = function (str) {
+  this.pushBytes(asciiBytes(str));
+};
+PdfBuilder.prototype.toBlob = function () {
+  return new Blob(this.chunks, { type: "application/pdf" });
+};
+
+function buildPdf(pages) {
+  // pages: [{ jpeg:Uint8Array, imgW, imgH, pageW, pageH, drawW, drawH, x, y }]
+  const pdf = new PdfBuilder();
+  const objectCount = 2 + pages.length * 3;   // catalog + pages tree + (page, content, image) each
+  const offsets = new Array(objectCount + 1).fill(0);
+
+  const startObject = (num) => {
+    offsets[num] = pdf.length;
+    pdf.pushText(num + " 0 obj\n");
+  };
+  const endObject = () => pdf.pushText("endobj\n");
+
+  pdf.pushText("%PDF-1.4\n");
+  pdf.pushBytes(new Uint8Array([0x25, 0xE2, 0xE3, 0xCF, 0xD3, 0x0A])); // binary marker
+
+  // 1 = catalog, 2 = pages tree, then per page: 3+i*3 page, 4+i*3 content, 5+i*3 image
+  const pageObjNum    = (i) => 3 + i * 3;
+  const contentObjNum = (i) => 4 + i * 3;
+  const imageObjNum   = (i) => 5 + i * 3;
+
+  startObject(1);
+  pdf.pushText("<< /Type /Catalog /Pages 2 0 R >>\n");
+  endObject();
+
+  startObject(2);
+  const kids = pages.map((_, i) => pageObjNum(i) + " 0 R").join(" ");
+  pdf.pushText("<< /Type /Pages /Count " + pages.length + " /Kids [" + kids + "] >>\n");
+  endObject();
+
+  pages.forEach((p, i) => {
+    const pw = p.pageW.toFixed(2);
+    const ph = p.pageH.toFixed(2);
+
+    startObject(pageObjNum(i));
+    pdf.pushText(
+      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + pw + " " + ph + "] " +
+      "/Resources << /XObject << /Im0 " + imageObjNum(i) + " 0 R >> /ProcSet [/PDF /ImageC] >> " +
+      "/Contents " + contentObjNum(i) + " 0 R >>\n"
+    );
+    endObject();
+
+    const stream = "q\n" +
+      p.drawW.toFixed(2) + " 0 0 " + p.drawH.toFixed(2) + " " +
+      p.x.toFixed(2) + " " + p.y.toFixed(2) + " cm\n" +
+      "/Im0 Do\nQ\n";
+    const streamBytes = asciiBytes(stream);
+
+    startObject(contentObjNum(i));
+    pdf.pushText("<< /Length " + streamBytes.length + " >>\nstream\n");
+    pdf.pushBytes(streamBytes);
+    pdf.pushText("\nendstream\n");
+    endObject();
+
+    startObject(imageObjNum(i));
+    pdf.pushText(
+      "<< /Type /XObject /Subtype /Image /Width " + p.imgW + " /Height " + p.imgH +
+      " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + p.jpeg.length + " >>\nstream\n"
+    );
+    pdf.pushBytes(p.jpeg);
+    pdf.pushText("\nendstream\n");
+    endObject();
+  });
+
+  const xrefStart = pdf.length;
+  let xref = "xref\n0 " + (objectCount + 1) + "\n0000000000 65535 f \n";
+  for (let n = 1; n <= objectCount; n++) {
+    xref += String(offsets[n]).padStart(10, "0") + " 00000 n \n";
+  }
+  pdf.pushText(xref);
+  pdf.pushText(
+    "trailer\n<< /Size " + (objectCount + 1) + " /Root 1 0 R >>\n" +
+    "startxref\n" + xrefStart + "\n%%EOF\n"
+  );
+
+  return pdf.toBlob();
+}
+
+/* =====================================================================
+   PAGE LAYOUT
+   ===================================================================== */
+function layoutPage(imgW, imgH) {
+  const isLandscapeImage = imgW > imgH;
+
+  if (state.pageSize === "fit") {
+    // Page matches the image, capped to a sane point size.
+    const maxSide = 1400; // pt
+    let pw = imgW * 0.75, ph = imgH * 0.75;   // 96 dpi → 72 pt
+    const k = Math.min(1, maxSide / Math.max(pw, ph));
+    pw *= k; ph *= k;
+
+    // Honour an explicit orientation request even in Fit mode.
+    if (state.orientation === "portrait" && pw > ph)      { const t = pw; pw = ph; ph = t; }
+    else if (state.orientation === "landscape" && ph > pw){ const t = pw; pw = ph; ph = t; }
+
+    if (state.orientation === "auto") {
+      return { pageW: pw, pageH: ph, drawW: pw, drawH: ph, x: 0, y: 0 };
+    }
+    // Orientation forced: fit the image inside the swapped page, centred.
+    return fitInside(imgW, imgH, pw, ph, 0);
+  }
+
+  const base = PAGE_DIMS[state.pageSize] || PAGE_DIMS.a4;
+  let pageW = base.w, pageH = base.h;
+
+  if (state.orientation === "landscape" || (state.orientation === "auto" && isLandscapeImage)) {
+    pageW = base.h; pageH = base.w;
+  }
+
+  const margin = 18; // 0.25 in
+  return fitInside(imgW, imgH, pageW, pageH, margin);
+}
+
+function fitInside(imgW, imgH, pageW, pageH, margin) {
+  const availW = Math.max(1, pageW - margin * 2);
+  const availH = Math.max(1, pageH - margin * 2);
+  const scale = Math.min(availW / imgW, availH / imgH);
+  const drawW = imgW * scale;
+  const drawH = imgH * scale;
+  return {
+    pageW, pageH, drawW, drawH,
+    x: (pageW - drawW) / 2,
+    y: (pageH - drawH) / 2
+  };
+}
+
+/* =====================================================================
+   GENERATE + DOWNLOAD
+   ===================================================================== */
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.rel = "noopener";
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 4000);
+}
+
+async function generate() {
+  if (state.generating) return;                       // blocks double taps
+
+  if (!state.images.length) {
+    setStatus(mainStatus, "Please select at least one image first.", "err");
+    dropzone.focus();
+    return;
+  }
+
+  state.generating = true;
+  downloadBtn.disabled = true;
+  downloadBtn.textContent = "Creating PDF...";
+  clearAllBtn.disabled = true;
+  setStatus(mainStatus, "", null);
+  setProgress(0);
+
+  const failures = [];
+  const pages = [];
+
+  try {
+    for (let i = 0; i < state.images.length; i++) {
+      const item = state.images[i];
+      try {
+        const raster = await rasterise(item);
+        const box = layoutPage(raster.width, raster.height);
+        pages.push({
+          jpeg: raster.bytes,
+          imgW: raster.width,
+          imgH: raster.height,
+          pageW: box.pageW, pageH: box.pageH,
+          drawW: box.drawW, drawH: box.drawH,
+          x: box.x, y: box.y
+        });
+      } catch (err) {
+        failures.push(item.name);
+      }
+      setProgress((i + 1) / state.images.length * 0.9);
+      // Yield to the UI thread so the page stays responsive on phones.
+      await new Promise(r => setTimeout(r, 0));
+    }
+
+    if (!pages.length) {
+      throw new Error("no-pages");
+    }
+
+    const blob = buildPdf(pages);
+    setProgress(1);
+
+    if (!blob || blob.size < 100) throw new Error("bad-blob");
+
+    triggerDownload(blob, "images-to-pdf.pdf");
+
+    const msg = "PDF ready — " + pages.length + " page" + (pages.length === 1 ? "" : "s") +
+                " · " + humanSize(blob.size) +
+                (failures.length ? ". Skipped: " + failures.join(", ") + "." : ".");
+    setStatus(mainStatus, msg, failures.length ? "err" : "ok");
+
+  } catch (err) {
+    let msg = "Sorry, the PDF could not be created. Please try again.";
+    if (err && err.message === "no-pages") {
+      msg = "None of the selected images could be processed. Try removing very large or damaged files.";
+    } else if (String(err && err.name).indexOf("Quota") !== -1 || /memory|allocation/i.test(String(err && err.message))) {
+      msg = "Your device ran out of memory. Try fewer images, or choose the “Smaller file” quality.";
+    }
+    setStatus(mainStatus, msg, "err");
+  } finally {
+    state.generating = false;
+    downloadBtn.disabled = false;
+    downloadBtn.textContent = "Download PDF";
+    clearAllBtn.disabled = state.images.length === 0;
+    setTimeout(() => setProgress(null), 900);
+  }
+}
+
+/* =====================================================================
+   SAFETY NETS — never show a raw JS error, never stay stuck
+   ===================================================================== */
+function recoverFromCrash() {
+  if (!state.generating) return;
+  state.generating = false;
+  downloadBtn.disabled = false;
+  downloadBtn.textContent = "Download PDF";
+  clearAllBtn.disabled = state.images.length === 0;
+  setProgress(null);
+  setStatus(mainStatus, "Something went wrong while creating the PDF. Please try again.", "err");
+}
+window.addEventListener("error", recoverFromCrash);
+window.addEventListener("unhandledrejection", recoverFromCrash);
+window.addEventListener("pagehide", () => {
+  state.images.forEach(i => URL.revokeObjectURL(i.url));
+});
+
+/* Initial paint */
+render();
+
+})();
+</script>
+</body>
+</html>
